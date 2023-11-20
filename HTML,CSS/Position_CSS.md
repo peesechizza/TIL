@@ -59,8 +59,21 @@ position 속성은 문서 상에 요소를 배치하는 방법을 지정한다.
 
 `(조건)` : 조건이 사실일 때 뒤에 따라오는 것 해석
 
-- min : 크기가 작은 순섣대로
-- max : 크기가 큰 순서대로
+- min-width : 설정 width 이상인 경우 적용
+  ```css
+  @media (min-width: 600px) {
+    h1 {
+      font-size: 100px;
+    }
+  }
+
+  @media (width >=600px) {
+    h1 {
+      font-size: 100px;
+    }
+  }
+  ```
+- max-width : 설정 width 이하인 경우 적용
 
 ## CSS 적용 우선순위
 
