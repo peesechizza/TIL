@@ -96,3 +96,22 @@ footer p:hover {
 ### :where() 와 :is()의 차이점
 
 `:where()` 은 명시도가 0이고 `:is()` 는 명시도가 10이기 때문에 각각의 스타일을 적용했을 때 명시도가 더 높은 `:is()` 의 스타일링이 적용된다.
+
+## :has()
+
+`:has()` 는 하위 요소에 따라 요소를 선택할 수 있다.
+
+```css
+selector:has(sub-selector) {
+  /* CSS rules */
+}
+```
+
+여기서 `selector`는 유효한 css 선택자이고 `sub-selector`는 원하는 하위 요소와 일치하는 유효한 CSS 선택자이다. `:has()` 선택자는 하위 선택자와 일치하는 하나 이상의 자손을 포함하는 모든 요소와 일치한다.
+
+```css
+/* 중첩된 <ul> 요소를 포함하는 모든 <li> 요소를 선택 */
+li:has(ul) {
+  background-color: yellow;
+}
+```
