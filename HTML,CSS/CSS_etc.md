@@ -59,3 +59,40 @@
   <span>안녕하세요</span>
 </dialog>
 ```
+
+## :is()
+
+CSS를 작성할 때 여러 요소에 동일한 스타일을 적용하기 위해 `:is()` 를 이용하면 긴 선택자 목록을 사용하지 않고 가독성도 향상시킬 수 있다.
+
+```css
+:is(ul, ol) li {
+  font-size: 3rem;
+}
+
+ul li,
+ol li {
+  font-size: 3rem;
+}
+```
+
+## :where()
+
+`:where()` 가상 클래스 함수는 **선택자 목록**을 인수로 취하고 해당 목록의 선택자 중 하나가 선택할 수 있는 모든 요소를 선택한다.
+
+```css
+:where(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+
+header p:hover,
+main p:hover,
+footer p:hover {
+  color: red;
+  cursor: pointer;
+}
+```
+
+### :where() 와 :is()의 차이점
+
+`:where()` 은 명시도가 0이고 `:is()` 는 명시도가 10이기 때문에 각각의 스타일을 적용했을 때 명시도가 더 높은 `:is()` 의 스타일링이 적용된다.
