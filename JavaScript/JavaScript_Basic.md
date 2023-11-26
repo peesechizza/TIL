@@ -84,11 +84,27 @@ console.log(greeting);
 //Uncaught TypeError: Assignment to constant variable
 ```
 
-## 유효한 참조 범위 (Scope)
+## Scope
+
+### Scope란?
+
+스포크의 정의는 식별자 규칙에 따른 유효 범위이다.
+
+식별자(변수, 함수, 클래스)에 접근할 수 있는 범위가 존재하며, 범위는 중괄호(블록) 또는 함수에 의해 나눠진다. 그 범위를 스코프라고 부른다.
+
+### 규칙
+
+1. 안쪽 스코프에서 바깥쪽 스코프로 접근할 수 있지만 반대는 불가능하다.
+2. 스코프는 중첩이 가능하다.
+3. 전역 스코프와 지역 스코프
+   - 가장 바깥쪽의 스코프를 전역 스코프 (Gloabl Scope) 라고 부른다.
+   - 전역이 아닌 다른 스코프는 전부 지역 스코프 (Local Scope)이다.
+4. 지역 변수는 전역 변수보다 우선순위가 더 높다.
 
 ### var
 
 - **함수 레벨 스코프;** 함수 내에서 선언된 var 변수는 함수 내에서만 유효하고 함수 외부에서는 참조할 수 없다.
+
   ```jsx
   function func() {
     if (true) {
@@ -105,6 +121,7 @@ console.log(greeting);
 ### let, const
 
 - **블록 레벨 스코프; 함수,** if, for, while, try/catch 문 등의 모든 코드 블록 내부에서 선언된 변수는 코드 블록 내에서만 유효하며 코드 블록 외부에서는 참조할 수 없다.
+
   ```jsx
   function func() {
     if (true) {
