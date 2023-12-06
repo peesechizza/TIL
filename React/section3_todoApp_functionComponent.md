@@ -968,3 +968,37 @@ const handleRemoveClick = () => {
      setIsEditing(false);
    };
    ```
+
+## localStorage에 todoData 값 담기
+
+localStorage에 todoData 값을 담아서 페이지를 refresh 해도 todoData가 계속 남아 있을 수 있게 해주기
+
+### setTodoData 를 이용해서 todoData State를 바꿔줄 때 localStorage에도 같이 바꿔주기
+
+```javascript
+const handleClick = useCallback(
+  (id) => {
+    let newTodoData = todoData.filter((data) => data.id !== id);
+    setTodoData(newTodoData);
+    localStorage.setItem("todoData", JSON.stringify(newTodoData));
+  },
+  [todoData]
+);
+```
+
+객체나 배열을 저장해줄시에는 JSON.stringify를 이용해서 텍스트로 변환해준 후에 저장을 해주면 된다.
+
+### localStorage에 저장된 todoData 활용하기
+
+```javascript
+function App() {
+		const [todoData, setTodoData] = useState([]);
+```
+
+```javascript
+const initialTodoData = localStorage.getItem("todoData") ?
+	JSON.parse(localStorage.getItem("todoData)) : [];
+
+function App() {
+		const [todoData, setTodoData] = useState(initialTodoData);
+```
