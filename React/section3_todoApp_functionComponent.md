@@ -492,3 +492,479 @@ export default function Lists({ todoData, setTodoData }) {
   );
 }
 ```
+
+## Drag and Drop 기능 추가하기
+
+### Drag and Drop 기능 구현 순서
+
+- HTML 드래그 앤 드롭 API를 사용하여 원하는 목록을 드래그 가능하게 한다.
+- 사용자가 드래그를 할 때 적절한 애니메이션을 준다.
+- 사용자가 드래그를 멈췄는지 확인하고 애니메이션을 준다.
+- 클라이언트가 목록을 재정렬한 경우 항목의 위치를 새 항목으로 업데이트한다.
+
+### 필요 모듈 설치하기
+
+터미널에 `npm install react-beautiful-dnd —save` 입력 후 설치한다.
+
+![DragDropContext](https://blog.kakaocdn.net/dn/KN8Z6/btrsi8RiTdz/4fkz2ZOk4Ul0PkLG7vYBi0/img.gif)
+
+### API를 이용한 틀 만들어주기
+
+```jsx
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+```
+
+사용하기 위해 import 해줘야한다.
+
+```jsx
+<div>
+  <DragDropContext>
+    <Droppable droppableId="todo">
+      {(provided) => (
+        <div {...provided.droppableProps} ref={provided.innerRef}>
+          {todoData.map((data, index) => (
+            <Draggable
+              key={data.id}
+              draggableId={data.id.toString()}
+              index={index}
+            >
+              {(provided, snapshot) => (
+                <div
+                  key={data.id}
+                  {...provided.draggableProps}
+                  ref={provided.innerRef}
+                  {...provided.dragHandleProps}
+                  className="flex items-center justify-between w-full px-4 py-1 my-2 text-gray-600 bg-gray-100 border rounded"
+                >
+                  <div className="items-center">
+                    <input
+                      type="checkbox"
+                      defaultChecked={false}
+                      onChange={() => handleCompleteChange(data.id)}
+                    />{" "}
+                    <span
+                      className={data.completed ? "line-through" : undefined}
+                    >
+                      {data.title}
+                    </span>
+                  </div>
+                  <div className="items-center">
+                    <button
+                      className="px-4 py-2 float-right"
+                      onClick={() => handleClick(data.id)}
+                    >
+                      X
+                    </button>
+                  </div>
+                </div>
+              )}
+            </Draggable>
+          ))}
+          // placeholder 속성은 목록에 빈 공간을 만든다. 이렇게 하면 드래그 작업이
+          자연스럽게 된다.
+          {provided.placeholder}
+        </div>
+      )}
+    </Droppable>
+  </DragDropContext>
+</div>
+```
+
+provided object에는 스타일 지정 및 조회를 위한 속성이 포함되어 있다.
+
+### Dragging 하는 요소의 스타일링 변경
+
+```jsx
+<div
+  key={data.id}
+  {...provided.draggableProps}
+  ref={provided.innerRef}
+  {...provided.dragHandleProps}
+  className={`${snapshot.isDragging ? "bg-gray-400" : "bg-gray-100"} flex items-center justify-between w-full px-4 py-1 my-2 text-gray-600 bg-gray-100 border rounded}
+>
+```
+
+### Dragging 한 후 데이터 순서 적용
+
+```jsx
+<DragDropContext onDragEnd={handleEnd}>
+```
+
+```jsx
+const handleEnd = (result) => {
+  // result 매개변수에는 source 항목 및 대상 위치와 같은 드래그 이벤트에 대한 정보가 포함된다.
+  console.log(result);
+
+  // 목적지가 없으면 (이벤트 취소) 이 함수를 종료한다.
+  if (!result.destination) return;
+
+  // 리액트 불변성을 지켜주기 위해 새로운 todoData 생성
+  const newTodoData = [...todoData];
+
+  // 1. 변경시키는 아이템을 배열에서 지워준다.
+  // 2. return 값으로 지워진 아이템을 잡아준다.
+  const [reorderedItem] = newTodoData.splice(result.source.index, 1);
+
+  // 원하는 자리에 reorderedItem을 insert 해준다.
+  newTodoData.splice(result.destination.index, 0, reorderedItem);
+  setTodoData(newTodoData);
+};
+```
+
+### Drag and Drop 오류
+
+리액트 18버전을 사용할 때 드래그 앤 드랍 기능을 사용하면 아래같은 에러가 나온다.
+
+```
+Uncaught runtime errors:
+
+ERROR
+
+Invariant failed: Cannot find droppable entry with id [todo]
+    at handleError (http://localhost:3000/static/js/bundle.js:49817:58)
+    at http://localhost:3000/static/js/bundle.js:49836:7
+```
+
+그럴 때는 index.js에서 React.StrictMode를 제거해주면 된다.
+
+```jsx
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
+
+🔗 [출처]
+
+[**[React.js] react strict 모드란?**](https://velog.io/@kysung95/%EC%A7%A4%EB%A7%89%EA%B8%80-react-strict-%EB%AA%A8%EB%93%9C%EB%9E%80)
+
+## 리액트 불변성 지키기
+
+### 리액트에서 불변성이란 무엇인가?
+
+불변성이란 사전적 의미로는 값이나 상태를 변경할 수 없는 것을 의미한다.
+
+### 자바스크립트 타입을 통한 불변성 의미
+
+원시 타입은 불변성(immutable)을 가지고 있고 참조 타입은 그렇지 않다(mutuable).
+
+- 원시 타입 : Boolean, String, Number, null, undefined, Symbol
+- 참조 타입 : Object, Array
+
+![스크린샷 2023-12-06 오후 7 28 13](https://github.com/peesechizza/TIL/assets/110324109/d7aa8e97-ccb7-4bca-b7cc-27184c0679ea)
+
+기본적으로 Javascript는 원시 타입에 대한 참조 및 값을 저장하기 위해 Call Stack 메모리 공간을 사용하고 실제 데이터가 변수에 할당된다. 참조 타입의 경우 Heap이라는 별도의 메모리 공간을 사용한다. 이 경우 Call Stack은 개체 및 배열 값이 아닌 메모리에만 Heap 메모리 참조 ID를 값으로 지정한다.
+
+원시 타입의 예로 `let username = “walter”` 에서 `username = “john”` 으로 값을 변경 시 대체한 것이 아니라 메모리 영역 a에 있는 walter라는 값을 그대로 두고 메모리 영역 b에 john을 새로 할당한 것이다.
+
+하지만, 배열에 대한 요소를 추가하거나 객체 속성값을 변경할 때 Call Stack의 참조 ID는 동일하게 유지되고 Heap 메모리에서만 변경된다.
+
+### 불변성을 지켜야 하는 이유
+
+1. 참조 타입에서 객체나 배열의 값이 변할 때 원본 데이터가 변경되기 때문에 이 원본 데이터를 참조하고 있는 다른 객체에서 예상치 못한 오류가 발생할 수 있어 프로그래밍의 복잡도가 올라간다.
+2. 리액트에서 화면을 업데이트 할 때 불변성을 지켜서 값을 이전 값과 비교해서 변경된 사항을 확인한 후 업데이트하기 때문에 불변성을 지켜줘야한다.
+
+### 불변성을 지키는 방법
+
+참조 타입에서 값을 바꿨을 때 Call Stack 주소 값은 같은데 Heap 메모리 값만 바꿔주기에 불변성을 유지할 수 없었으므로 새로운 배열을 반환하는 메소드를 사용하면 된다.
+
+- `spread operator`, `map`, `filter`, `slice`, `reduce`
+- 원본 데이터를 변경하는 메서드 - `splice`, `push`
+
+## List 컴포넌트 생성하기
+
+1. **components 폴더에 List.js 파일 생성**
+2. **함수형 컴포넌트 생성**
+
+   ```jsx
+   import React from "react";
+
+   const List = () => {
+     return <div>List</div>;
+   };
+
+   export default List;
+   ```
+
+3. **UI 부분 List 컴포넌트 이동**
+
+   ```jsx
+   import React from "react";
+
+   const List = () => {
+     return (
+       <div
+         key={data.id}
+         {...provided.draggableProps}
+         ref={provided.innerRef}
+         {...provided.dragHandleProps}
+         className={`${
+           snapshot.isDragging ? "bg-gray-400" : "bg-gray-100"
+         } flex items-center justify-between w-full px-4 py-1 my-2 text-gray-600 bg-gray-100 border rounded`}
+       >
+         <div className="items-center">
+           <input
+             type="checkbox"
+             defaultChecked={false}
+             onChange={() => handleCompleteChange(data.id)}
+           />{" "}
+           <span className={data.completed ? "line-through" : undefined}>
+             {title}
+           </span>
+         </div>
+         <div className="items-center">
+           <button
+             className="px-4 py-2 float-right"
+             onClick={() => handleClick(data.id)}
+           >
+             X
+           </button>
+         </div>
+       </div>
+     );
+   };
+
+   export default List;
+   ```
+
+4. **함수 List 컴포넌트 이동**
+
+   ```jsx
+   const handleCompleteChange = (id) => {
+     let newTodoData = todoData.map((data) => {
+       if (data.id === id) {
+         data.completed = !data.completed;
+       }
+       return data;
+     });
+     setTodoData(newTodoData);
+   };
+
+   const handleClick = (id) => {
+     let newTodoData = todoData.filter((data) => data.id !== id);
+     setTodoData(newTodoData);
+   };
+   ```
+
+5. **Lists 컴포넌트에서 List 컴포넌트 import 및 props 내려주기**
+
+   ```jsx
+   <Draggable key={data.id} draggableId={data.id.toString()} index={index}>
+     {(provided, snapshot)} => (
+     <List
+       key={data.id}
+       id={data.id}
+       title={data.title}
+       completed={data.completed}
+       todoData={todoData}
+       setTodoData={setTodoData}
+       provided={provided}
+       snapshot={snapshot}
+     />
+     )}
+   </Draggable>
+   ```
+
+6. **List 컴포넌트에서 Props 받아오기**
+
+   ```jsx
+   const List = ({ id, title, completed, todoData, setTodoData, provided, snapshot}) => {
+   ```
+
+7. `data.id` ⇒ id 변경 …
+
+## React.memo 를 이용한 컴포넌트 렌더링 최적화
+
+### 현재 Todo 앱의 문제점
+
+현재 Todo 앱에서 App, Lists, List, Form 컴포넌트로 나눠져 있다. 이렇게 나눠준 이유는 재사용성과 각 컴포넌트의 최적화를 위해서이다.
+
+현재 Form 에서 글을 타이핑할 때 Form 컴포넌트와 그 State 값을 가지고 있는 App 컴포넌트만 렌더링이 되어야하는데, 글자 입력마다 props가 바뀌지 않아서 렌더링 하지 않아도 되는 Lists 컴포넌트와 List 컴포넌트까지 다시 렌더링 된다.
+
+### React.memo
+
+React.memo 적용은 간단하게 원하는 컴포넌트를 `React.memo` 로 감싸주면 된다.
+
+```jsx
+const Lists = React.memo(({ todoData, setTodoData })) => {
+```
+
+## useCallback을 이용한 함수 최적화
+
+원래 컴포넌트가 렌더링 될 때 안에 있는 함수도 다시 만들게 된다. 컴포넌트가 리렌더링 될 때 마다 함수를 계속 다시 만든다고 하면 자식 컴포넌트에 props로 내려 주게되면 함수를 포함하고 있는 컴포넌트가 리렌더링 될 때 마다 자식 컴포넌트도 함수가 새롭게 만들어지면서 계속 리렌더링 되게 된다.
+
+1. 삭제 버튼 함수 App 컴포넌트로 이동
+2. props로 함수 넘겨주기
+   - 원래는 React.memo로 감싸줘서 리렌더링 되지 않던 컴포넌트들이 한 글자 입력마다 Lists 컴포넌트와 List 컴포넌트까지 다시 리렌더링 되는 걸 볼 수 있다.
+
+### `React.useCallback` 적용으로 문제 해결
+
+useCallback 적용은 useCallback 안에 콜백함수와 의존성 배열을 순서대로 넣으면 된다.
+
+```jsx
+onst handleClick = useCallback((id) => {
+    let newTodoData = todoData.filter((data) => data.id !== id);
+    setTodoData(newTodoData);
+  }, [todoData]);
+```
+
+함수 내에서 참조하는 state, props가 있다면 의존성 배열에 추가하면 된다.
+
+`useCallback`으로 인해서 todoData가 변하지 않는다면 함수는 새로 생성되지 않는다. 새로 생성되지 않기 떄문에 메모리에 새로 할당되지 않고 동일 참조 값을 사용하게 된다.
+
+의존성 배열에 아무것도 없다면 컴포넌트가 최초 렌더링 시에만 함수가 생성되며 그 이후에는 동일한 참조값을 사용하는 함수가 된다.
+
+## useMemo를 이용한 결과값 최적화
+
+### Memoization
+
+memoization은 비용이 많이 드는 함수 호출 결과를 저장하고 동일한 입력이 발생할 때 캐시된 결과를 반환하여 컴퓨터 프로그램의 속도를 높이는데 주로 사용되는 최적화 기술이다.
+
+```jsx
+function Component({ a, b }) {
+  const result = compute(a, b);
+  return <div>{result}</div>;
+}
+```
+
+component 내의 compute 함수가 만약 복잡한 연산을 수행하면 결과 값을 리턴하는데 오랜 시간이 걸리게 된다. 컴포넌트가 계속 리렌더링 된다면 연산을 수행하는데 오랜 시간이 걸려 성능이 안좋아지고, UI 지연 현상이 일어날 것이다.
+
+이러한 현상을 해결해주기 위해서 사용하는 것이 useMemo이다.
+
+### useMemo
+
+useMemo로 감싸준 후에 함수를 넣어주고, 의존성 배열을 넣어준다.
+
+```jsx
+function Component({ a, b }) {
+  const result = useMemo(() => compute(a, b), [a, b]);
+  return <div>{result}</div>;
+}
+```
+
+## 리액트 확장 프로그램 추가하기
+
+chrome 에서 [**React Developer Tools**](https://chromewebstore.google.com/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi)을 다운 받는다.
+
+### 익스텐션을 이용해서 렌더링 되는 부분 표시하기
+
+Components 탭에서 Highlight updates 부분을 체크해주면 쉽게 컴포넌트가 렌더링 되는 것을 볼 수 있다.
+
+## 할 일 리스트 모두 지우기 버튼 생성
+
+```jsx
+<div className="flex justify-between mb-3">
+  <h1>Todo List</h1>
+  <button onClick={handleRemoveClick}>Delete All</button>
+</div>
+```
+
+```jsx
+const handleRemoveClick = () => {
+  setTodoData([]);
+};
+```
+
+## 할 일 목록을 수정하는 기능 추가
+
+1. **다른 UI 제공을 위한 State 생성**
+
+   ```jsx
+   const [isEditing, setIsEditing] = useState(false);
+   const [editedTitle, setEditedTitle] = useState(title);
+   ```
+
+2. Edit 버튼 추가, 클릭 시 isEditing State 변경
+
+   ```jsx
+   <div className="items-center">
+     <button className="px-4 py-2 float-right" onClick={() => handleClick(id)}>
+       X
+     </button>
+     <button
+       className="px-4 py-2 float-right"
+       onClick={() => setIsEditing(true)}
+     >
+       edit
+     </button>
+   </div>
+   ```
+
+3. 조건에 따른 UI 렌더링
+
+   ```jsx
+   if (isEditing) {
+   		return (
+   				<div>editing...</div>
+   		)
+   } else {
+   		return ( ...
+
+   ```
+
+4. editing시 UI 작성
+
+   ```jsx
+   <div
+     className={`flex items-center justify-between w-full px-4 py-1 my-2 text-gray-600 bg-gray-100 border rounded`}
+   >
+     <div className="items-center">
+       <form>
+         <input
+           className="w-full px-3 py-2 mr-4 text-gray-500 rounded"
+           value={editedTitle}
+         />
+       </form>
+     </div>
+     <div className="items-center">
+       <button
+         className="px-4 py-2 float-right"
+         onClick={() => setIsEditing(false)}
+       >
+         X
+       </button>
+       <button className="px-4 py-2 float-right" type="submit">
+         save
+       </button>
+     </div>
+   </div>
+   ```
+
+5. editing 입력할 때 editedTitle State 변경
+
+   ```jsx
+   <input
+     className="w-full px-3 py-2 mr-4 text-gray-500 rounded"
+     value={editedTitle}
+     onChange={handleEditChange}
+     autoFocus
+   />
+   ```
+
+   ```jsx
+   const handleEditChange = (event) => {
+     setEditedTitle(event.target.value);
+   };
+   ```
+
+6. editing 입력 후 Save
+
+   ```jsx
+   <form onSubmit={handleSubmit}>
+
+   <button onClick={handleSubmit}>
+   ```
+
+   ```jsx
+   const handleSubmit = () => {
+     let newTodoData = todoData.map((data) => {
+       if (data.id === id) {
+         data.title = editedTitle;
+       }
+       return data;
+     });
+     setTodoData(newTodoData);
+     setIsEditing(false);
+   };
+   ```
