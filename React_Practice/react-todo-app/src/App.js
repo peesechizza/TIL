@@ -22,12 +22,23 @@ export default class App extends Component {
     float: "right",
   };
 
-  getStyle = (id) => {
+  getStyle = (completed) => {
     return {
       padding: "10px",
       borderBottom: "1px dotted #ccc",
-      textDecoration: "none",
+      textDecoration: completed ? "line-through" : "none",
     };
+  };
+
+  handleCompleteChange = (id) => {
+    let newTodoData = this.state.todoData.map((data) => {
+      if (data.id === id) {
+        data.completed = !data.completed;
+      }
+
+      return data;
+    });
+    this.setState({ todoData: newTodoData });
   };
 
   handleSubmit = (event) => {
@@ -77,8 +88,14 @@ export default class App extends Component {
           </form>
 
           {this.state.todoData.map((data) => (
-            <div style={this.getStyle()} key={data.id}>
-              <input type="checkbox" defaultChecked={false} /> {data.title}
+            <div style={this.getStyle(data.completed)} key={data.id}>
+              <input
+                type="checkbox"
+                defaultChecked={false}
+                onChange={() => this.handleCompleteChange(data.id)}
+              />{" "}
+              {"  "}
+              {data.title}
               <button
                 onClick={() => this.handleClick(data.id)}
                 style={this.btnStyle}
