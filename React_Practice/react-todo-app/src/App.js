@@ -10,6 +10,7 @@ export default class App extends Component {
         completed: false,
       },
     ],
+    value: "",
   };
 
   btnStyle = {
@@ -29,6 +30,22 @@ export default class App extends Component {
     };
   };
 
+  handleSubmit = (event) => {
+    event.preventDefault();
+
+    let newTodo = {
+      id: Date.now(),
+      title: this.state.value,
+      completed: false,
+    };
+
+    this.setState({ todoData: [...this.state.todoData, newTodo], value: "" });
+  };
+
+  handleChange = (event) => {
+    this.setState({ value: event.target.value });
+  };
+
   handleClick = (id) => {
     let newTodoData = this.state.todoData.filter((data) => data.id !== id);
     this.setState({ todoData: newTodoData });
@@ -41,6 +58,23 @@ export default class App extends Component {
           <div className="title">
             <h1>할 일 목록</h1>
           </div>
+
+          <form style={{ display: "flex" }} onSubmit={this.handleSubmit}>
+            <input
+              type="text"
+              name="value"
+              placeholder="해야 할 일을 입력하세요."
+              style={{ flex: "10", padding: "5px" }}
+              value={this.state.value}
+              onChange={this.handleChange}
+            />
+            <input
+              type="submit"
+              value="입력"
+              className="btn"
+              style={{ flext: "1" }}
+            />
+          </form>
 
           {this.state.todoData.map((data) => (
             <div style={this.getStyle()} key={data.id}>
