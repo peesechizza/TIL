@@ -2,6 +2,14 @@ import React, { Component } from "react";
 import "./App.css";
 
 export default class App extends Component {
+  todoData = [
+    {
+      id: "1",
+      title: "공부",
+      completed: false,
+    },
+  ];
+
   btnStyle = {
     color: "#fff",
     border: "none",
@@ -11,12 +19,17 @@ export default class App extends Component {
     float: "right",
   };
 
-  getStyle = () => {
+  getStyle = (id) => {
     return {
       padding: "10px",
       borderBottom: "1px dotted #ccc",
       textDecoration: "none",
     };
+  };
+
+  handleClick = (id) => {
+    let newTodoData = this.todoData.filter((data) => data.id !== id);
+    console.log(newTodoData);
   };
 
   render() {
@@ -27,11 +40,17 @@ export default class App extends Component {
             <h1>할 일 목록</h1>
           </div>
 
-          <div style={this.getStyle()}>
-            <input type="checkbox" defaultChecked={false} />
-            공부하기
-            <button style={this.btnStyle}>X</button>
-          </div>
+          {this.todoData.map((data) => (
+            <div style={this.getStyle()} key={data.id}>
+              <input type="checkbox" defaultChecked={false} /> {data.title}
+              <button
+                onClick={() => this.handleClick(data.id)}
+                style={this.btnStyle}
+              >
+                X
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     );
