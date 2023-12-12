@@ -13,7 +13,8 @@ const List = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
 
-  const handleSubmit = () => {
+  const handleSubmit = (event) => {
+    event.preventDefault();
     let newTodoData = todoData.map((data) => {
       if (data.id === id) {
         data.title = editedTitle;
@@ -21,6 +22,8 @@ const List = ({
       return data;
     });
     setTodoData(newTodoData);
+    localStorage.setItem("todoData", JSON.stringify(newTodoData));
+
     setIsEditing(false);
   };
 
@@ -37,6 +40,7 @@ const List = ({
       return data;
     });
     setTodoData(newTodoData);
+    localStorage.setItem("todoData", JSON.stringify(newTodoData));
   };
 
   if (isEditing) {
@@ -85,7 +89,7 @@ const List = ({
         <div className="items-center">
           <input
             type="checkbox"
-            defaultChecked={completed}
+            defaultChecked={false}
             onChange={() => handleCompleteChange(id)}
           />
           {"  "}
