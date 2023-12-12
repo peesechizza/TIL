@@ -2,7 +2,7 @@ import React from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import List from "./List";
 
-export default function Lists({ todoData, setTodoData }) {
+export default function Lists({ todoData, setTodoData, handleClick }) {
   const handleEnd = (result) => {
     console.log(result);
 
@@ -30,6 +30,7 @@ export default function Lists({ todoData, setTodoData }) {
                 >
                   {(provided, snapshot) => (
                     <List
+                      handleClick={handleClick}
                       key={data.id}
                       id={data.id}
                       title={data.title}
