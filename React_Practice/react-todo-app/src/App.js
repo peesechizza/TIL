@@ -2,13 +2,15 @@ import React, { Component } from "react";
 import "./App.css";
 
 export default class App extends Component {
-  todoData = [
-    {
-      id: "1",
-      title: "공부",
-      completed: false,
-    },
-  ];
+  state = {
+    todoData: [
+      {
+        id: "1",
+        title: "공부",
+        completed: false,
+      },
+    ],
+  };
 
   btnStyle = {
     color: "#fff",
@@ -28,8 +30,8 @@ export default class App extends Component {
   };
 
   handleClick = (id) => {
-    let newTodoData = this.todoData.filter((data) => data.id !== id);
-    console.log(newTodoData);
+    let newTodoData = this.state.todoData.filter((data) => data.id !== id);
+    this.setState({ todoData: newTodoData });
   };
 
   render() {
@@ -40,7 +42,7 @@ export default class App extends Component {
             <h1>할 일 목록</h1>
           </div>
 
-          {this.todoData.map((data) => (
+          {this.state.todoData.map((data) => (
             <div style={this.getStyle()} key={data.id}>
               <input type="checkbox" defaultChecked={false} /> {data.title}
               <button
