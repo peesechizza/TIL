@@ -8,7 +8,7 @@ const initialTodoData = localStorage.getItem("todoData")
   : [];
 
 export default function App() {
-  const [todoData, setTodoData] = useState([]);
+  const [todoData, setTodoData] = useState(initialTodoData);
   const [value, setValue] = useState("");
 
   const handleRemoveClick = () => {
