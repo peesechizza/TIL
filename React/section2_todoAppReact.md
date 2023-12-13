@@ -85,6 +85,37 @@ JSX는 자바스크립트의 확장 문법이다. 리액트에서는 이 JSX를 
 
 JSX를 이용하면 UI를 나타낼 때 자바스크립트(logic)와 HTML구조(markup)를 같이 사용할 수 있기 때문에 기본 UI에 데이터가 변하는 것들이나 이벤트들이 처리되는 부분을 더욱 쉽게 구현할 수 있다.
 
+React.createElement API를 사용해서 엘리먼트를 생성한 후 이 엘리먼트를 In-Memory에 저장한다. 그리고 ReactDOM.render 함수를 사용해서 실제 웹 브라우저에 그려준다.
+
+```jsx
+const myelement = React.createElement("h1", {}, "I d not user JSX!"); // React.createElement
+
+ReactDOM.render(myelement, document.getElemendById("root")); // ReactDOM.render
+```
+
+모든 UI를 만들때마다 createElement를 사용해서 컴포넌트를 만들 수 없기 때문에 JSX를 사용한 후 그걸 바벨이 다시 createElement로 바꿔서 사용한다.
+
+JSX를 사용하면서 지켜야 할 규칙이 많은데, 그 중 JSX는 컴포넌트에 여러 엘리먼트 요소가 있다면 반드시 부모 요소 하나로 감싸줘야 한다.
+
+```jsx
+// wrong code
+function hello() {
+		return (
+				<div>Hello world!</div>
+				<div>what are you doing </div>
+		)
+}
+
+// right code
+function hello() {
+		return ( <div>
+				<div>Hello world!</div>
+				<div>what are you doing </div>
+		</div>
+		)
+}
+```
+
 ## 할 일 목록 앱 만들기 시작
 
 - 원래 있던 안쓰는 부분들 지우기
