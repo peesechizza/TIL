@@ -139,6 +139,11 @@ props는 읽기 전용 (immutable)으로 자녀 컴포넌트 입장에서는 변
 
 리액트에서 state는 컴포넌트 내부에서 바뀔 수 있는 값(mutable)을 의미한다. state이 변하면 re-render 된다.
 
+클래스형 컴포넌트에서는 `state` 사용, 함수형 컴포넌트에서는 `useState` 를 사용한다.
+
+> 🔗 출처
+> [[React] 클래스형 컴포넌트에서 state 사용하기](https://velog.io/@choie0423/React-%ED%81%B4%EB%9E%98%EC%8A%A4%ED%98%95-%EC%BB%B4%ED%8F%AC%EB%84%8C%ED%8A%B8%EC%97%90%EC%84%9C-state-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0)
+
 ## 할 일 목록 부분을 위한 컴포넌트 생성하기 ( 컴포넌트 분리하기 )
 
 ### 할 일 목록 부분 (리스트) 새로운 컴포넌트에 넣기
