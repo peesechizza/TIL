@@ -243,8 +243,11 @@ useEffect(() => {
 
 만약 배열을 생략한다면 리렌더링 될 때 마다 실행된다.
 
-> 🔗 **출처
-> [[React] useEffect() 함수](https://xiubindev.tistory.com/100) > [[JavaScript] 논리연산자 && 를 조건문처럼 쓰지말자](https://brunch.co.kr/@newnorm/117)**
+> 🔗 **출처**
+>
+> [[React] useEffect() 함수](https://xiubindev.tistory.com/100)
+>
+> [[JavaScript] 논리연산자 && 를 조건문처럼 쓰지말자](https://brunch.co.kr/@newnorm/117)\*\*
 
 ## 이미지 배너 생성하기 (Banner.js)
 
