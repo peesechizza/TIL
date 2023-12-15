@@ -31,7 +31,7 @@
   object-fit: contain;
 }
 
-/* .nav__input {
+.nav__input {
   position: fixed;
   left: 50%;
   transform: translate(-50%, 0);
@@ -40,4 +40,4 @@
   color: white;
   padding: 5px;
   border: none;
-} */
+}
