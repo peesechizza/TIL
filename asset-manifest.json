@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/React_Practice/react-netfilx-clone/static/css/main.039e856b.css",
-    "main.js": "/React_Practice/react-netfilx-clone/static/js/main.9cce8b2d.js",
-    "static/js/787.f2768235.chunk.js": "/React_Practice/react-netfilx-clone/static/js/787.f2768235.chunk.js",
-    "index.html": "/React_Practice/react-netfilx-clone/index.html",
-    "main.039e856b.css.map": "/React_Practice/react-netfilx-clone/static/css/main.039e856b.css.map",
-    "main.9cce8b2d.js.map": "/React_Practice/react-netfilx-clone/static/js/main.9cce8b2d.js.map",
-    "787.f2768235.chunk.js.map": "/React_Practice/react-netfilx-clone/static/js/787.f2768235.chunk.js.map"
+    "main.css": "/TIL/React_Practice/react-netfilx-clone/static/css/main.039e856b.css",
+    "main.js": "/TIL/React_Practice/react-netfilx-clone/static/js/main.1bacf211.js",
+    "static/js/787.f2768235.chunk.js": "/TIL/React_Practice/react-netfilx-clone/static/js/787.f2768235.chunk.js",
+    "index.html": "/TIL/React_Practice/react-netfilx-clone/index.html",
+    "main.039e856b.css.map": "/TIL/React_Practice/react-netfilx-clone/static/css/main.039e856b.css.map",
+    "main.1bacf211.js.map": "/TIL/React_Practice/react-netfilx-clone/static/js/main.1bacf211.js.map",
+    "787.f2768235.chunk.js.map": "/TIL/React_Practice/react-netfilx-clone/static/js/787.f2768235.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.039e856b.css",
-    "static/js/main.9cce8b2d.js"
+    "static/js/main.1bacf211.js"
   ]
 }
