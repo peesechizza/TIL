@@ -1074,4 +1074,252 @@ const debouncedSearchTerm = useDebounce(searchTerm, 500);
 >
 > **[자바스크립트의 setTimeout()과 setInterval() 함수](https://www.daleseo.com/js-timer/)**
 
-## 디테일 페이지 구현
+## useParams를 이용한 영화 상세 페이지 구현하기
+
+### 포스터 클릭 시 상세 페이지로
+
+`./src/pages/SearchPage/index.js`
+
+```jsx
+<div
+     onClick={() => navigate(`/${movie.id}`)}
+     className="movie__column-poster"
+>
+```
+
+```jsx
+const navigate = useNavigate();
+```
+
+### 상세 페이지에서 영화 상세 정보 가져오기
+
+```jsx
+import axios from "../../api/axios";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+
+export default function DetailPage() {
+  let { movieId } = useParams();
+  const [movies, setMovies] = useState({});
+
+  useEffect(() => {
+    async function fetchData() {
+      const request = await axios.get(`movie/${movieId}`);
+      setMovies(request.data);
+    }
+    fetchData();
+  }, [movieId]);
+
+  return <div>DetailPage</div>;
+}
+```
+
+### UI 완성하기
+
+```jsx
+if (!movies) return null;
+return (
+  <section>
+    <img
+      className="modal__poster-img"
+      src={`https://image.tmdb.org/t/p/original/${movies.backdrop_path}`}
+      alt="modal__poster-img"
+    ></img>
+  </section>
+);
+```
+
+> 🔗 **출처**
+>
+> **[[React] useParams() 사용하여 파라미터 가져오기](https://velog.io/@nemo/useParams)**
+
+## 모달 창 외부 클릭 시 모달 닫게 만드는 Custom Hooks 생성
+
+### useRef()
+
+특정 DOM을 선택할 때 사용하는 React Hooks이다.
+
+보통 JavaScript에서는 `getElementById`, `querySelctor` 같은 DOM Selector 함수를 사용해서 DOM을 선택한다.
+리액트에서는 ref라는 것을 이용하여 DOM을 선택하고, 클래스 컴포넌트에서는 `React.createRef`, 함수형 컴포넌트에서는 `useRef`을 사용한다.
+
+**DOM을 직접 선태해야 할 경우들**
+
+1. 엘리먼트 크기를 가져와야 할 때
+2. 스크롤바 위치를 가져와야 할 때
+3. 엘리먼트에 포커스를 설정해줘야 할 때
+4. ...
+
+### useRef() 사용법
+
+`useRef()` 를 이용해서 Ref 객체를 만들고, 이 객체를 특정 DOM에 ref 값으로 설정한다. 이렇게 되면 Ref 객체의 `.current` 값이 특정 DOM을 가리키게 된다.
+
+> 🔗 **출처**
+>
+> **[[React] useRef란?](https://velog.io/@jinyoung985/React-useRef%EB%9E%80)**
+
+## swiper 모듈을 이용한 터치 슬라이드 구현하기
+
+### swiper 설정
+
+`npm install swiper —-save`
+
+### swiper 적용 및 import
+
+```jsx
+import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+```
+
+```jsx
+return (
+    <section className="row">
+      <h2>{title}</h2>
+
+      <Swiper
+        // install Swiper modules
+        modules={[Navigation, Pagination, Scrollbar, A11y]}
+        navigation
+        pagination={{ clickable: true }}
+        loop={true}
+        breakpoints={{
+          1378: {
+            slidesPerView: 6,
+            slidesPerGroup: 6,
+          },
+          998: {
+            slidesPerView: 5,
+            slidesPerGroup: 5,
+          },
+          625: {
+            slidesPerView: 4,
+            slidesPerGroup: 4,
+          },
+          0: {
+            slidesPerView: 3,
+            slidesPerGroup: 3,
+          },
+        }}
+      >
+        <div className="row__posters" id={id}>
+          {movies.map((movie) => (
+            <SwiperSlide>
+              <img
+                onClick={() => handleClick(movie)}
+                className={`row__poster ${isLargeRow && "row__posterLarge"}`}
+                alt={movie.name}
+                key={movie.id}
+                src={`https://image.tmdb.org/t/p/original/${
+                  isLargeRow ? movie.poster_path : movie.backdrop_path
+                }`}
+              />
+            </SwiperSlide>
+          ))}
+        </div>
+      </Swiper>
+
+      {modalOpen && (
+        <MovieModal {...movieSelected} setModalOpen={setModalOpen} />
+      )}
+    </section>
+  );
+};
+```
+
+### style 적용
+
+```css
+.swiper-pagination {
+  text-align: right !important;
+}
+
+.swiper-pagination-bullet {
+  background: gray !important;
+  opacity: 1 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: white !important;
+}
+
+.swiper-button-prev {
+  color: white !important;
+}
+
+.swiper-button-next {
+  color: white !important;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+  font-size: 1.3rem !important;
+  font-weight: 600 !important;
+}
+```
+
+## github를 이용해서 배포하기
+
+### 깃허브 저장소 생성
+
+### API_KEY 환경 변수로 숨기기
+
+root-.env 생성
+
+```jsx
+REACT_APP_MOVIE_DB_API_KEY = "";
+```
+
+```jsx
+import axios from "axios";
+
+const instance = axios.create({
+  baseURL: "https://api.themoviedb.org/3",
+  params: {
+    api_key: process.env.REACT_APP_MOVIE_DB_API_KEY,
+    language: "ko-KR",
+  },
+});
+
+export default instance;
+```
+
+### 로컬 앱과 저장소 연결
+
+### gh-pages 모듈 설치
+
+`npm install gh-pages —save-dev`
+
+### 홈페이지 URL 작성
+
+```jsx
+"homepage": "https://{깃허브 유저 이름}.github.io/{저장소 이름}",
+```
+
+### 배포를 위한 Script 추가
+
+```json
+"scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+```
+
+### react router dom의 기본 경로 변경
+
+기본 경로 : https://~~~/react-netflix(basename)
+
+```jsx
+root.render(
+  <BrowserRouter basename="">
+    <App />
+  </BrowserRouter>
+);
+```
+
+### deploy 시작
+
+`npm run depoly`
