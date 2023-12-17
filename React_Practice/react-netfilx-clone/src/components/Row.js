@@ -7,6 +7,11 @@ import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/scrollbar";
+
 const Row = ({ title, id, fetchUrl, isLargeRow }) => {
   const [movies, setMovies] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
