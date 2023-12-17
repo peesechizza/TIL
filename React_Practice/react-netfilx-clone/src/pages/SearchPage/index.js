@@ -1,9 +1,11 @@
 import axios from "../../api/axios";
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./SearchPage.css";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function SearchPage() {
+  const navigate = useNavigate();
   const [searchResults, setSearchResults] = useState([]);
 
   const useQuery = () => {
@@ -12,12 +14,13 @@ export default function SearchPage() {
 
   let query = useQuery();
   const searchTerm = query.get("q");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
-    if (searchTerm) {
-      fetchSearchMovie(searchTerm);
+    if (debouncedSearchTerm) {
+      fetchSearchMovie(debouncedSearchTerm);
     }
-  }, [searchTerm]);
+  }, [debouncedSearchTerm]);
 
   const fetchSearchMovie = async (searchTerm) => {
     try {
@@ -38,9 +41,16 @@ export default function SearchPage() {
             const movieImageUrl =
               "https://image.tmdb.org/t/p/w500" + movie.backdrop_path;
             return (
-              <div className="movie">
-                <div className="movie__column-poster">
-                  <img src={movieImageUrl} alt="" className="movie__poster" />
+              <div className="movie" key={movie.id}>
+                <div
+                  onClick={() => navigate(`/${movie.id}`)}
+                  className="movie__column-poster"
+                >
+                  <img
+                    src={movieImageUrl}
+                    alt="movie"
+                    className="movie__poster"
+                  />
                 </div>
               </div>
             );
@@ -50,11 +60,9 @@ export default function SearchPage() {
     ) : (
       <section className="no-results">
         <div className="no-results__text">
-          <p>Your search for "{searchTerm}" did not have any matches.</p>
-          <p>Suggestions:</p>
-          <ul>
-            <li>Try different keywords</li>
-          </ul>
+          <p>
+            Your search for "{debouncedSearchTerm}" did not have any matches.
+          </p>
         </div>
       </section>
     );
