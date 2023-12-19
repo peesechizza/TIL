@@ -479,3 +479,958 @@ var foo = {} as Foo
 foo.bar = 123;
 foo.bas = ‘hello’
 ```
+
+## getStaticProps를 이용한 포스트 리스트 나열
+
+### 빌드 타임에 포스트 자료 가져오기 (index.tsx)
+
+```tsx
+export const getStaticProps: GetStaticProps = async () => {
+  const allPostsData = getSortedPostsData();
+  return {
+    props: {
+      allPostsData,
+    },
+  };
+};
+```
+
+### props로 포스트 데이터 가져오기
+
+```tsx
+export default function Home({ allPostsData }: {
+  allPostsData: {
+    date: string;
+    title: string;
+    id: string;
+  }[];
+}) {
+```
+
+### 리스트 나열하기
+
+```tsx
+<ul className={homeStyles.list}>
+  {allPostsData.map(({ id, title, date }) => (
+    <li className={homeStyles.listItem} key={id}>
+      <a>{title}</a>
+      <br />
+      <small className={homeStyles.lightText}>{date}</small>
+    </li>
+  ))}
+</ul>
+```
+
+## 포스트 자세히 보기 페이지로 이동 (file system 기반의 라우팅)
+
+### 파일 기반 네비게이션 기능
+
+리액트에서는 route를 위해서 react-router라는 라이브러리를 사용하지만 Next.js에는 페이지 개념을 기반으로 구축된 파일 시스템 기반 라우터가 있다.
+
+파일이 페이지 디렉토리에 추가되면 자동으로 경로로 사용할 수 있다. 페이지 디렉토리 내의 파일은 가장 일반적인 패턴을 정의하는데 사용할 수 있다.
+
+### 포스트 파일 생성
+
+`./pages/posts/[id].tsx` 생성 후 함수명 Post로 변경
+
+```tsx
+import React from "react";
+
+const Post = () => {
+  return <div>[id]</div>;
+};
+
+export default Post;
+```
+
+### Link 함수를 이용한 페이지 이동
+
+```tsx
+<Link href={`/posts/${id}`}>
+  <span>{title}</span>
+</Link>
+```
+
+## **포스트 데이터를 가져와서 보여주기 (remark)**
+
+### **getStaticPaths**
+
+동적 라우팅이 필요할 때 getStaticPaths로 경로 리스트를 정의하고, HTML에 build 시간에 렌더된다.
+
+Nextjs는 pre-render에서 정적으로 getStaticPaths 에서 호출하는 경로들을 가져온다.
+
+### **Post 데이터를 가져와야 하는 경로 목록을 가져오기**
+
+```tsx
+export const getStaticPaths: GetStaticPaths = async () => {
+  const paths = getAllPostIds();
+  // [{params: {id: 'pre-rendering'}, {param...}]
+  return {
+    paths,
+    fallback: false,
+  };
+};
+```
+
+### **fallback**
+
+- false 라면 getStaticPaths로 리턴되지 않는 것은 모두 404페이지가 뜬다.
+- true 라면 getStaticPaths로 리턴되지 않는 것은 404로 뜨지 않고, fallback 페이지가 뜨게 된다.
+
+```tsx
+export function getAllPostIds() {
+  const fileNames = fs.readdirSync(postsDirectory);
+  return fileNames.map((fileName) => {
+    return {
+      params: {
+        id: fileName.replace(/\.md$/, ""),
+      },
+    };
+  });
+}
+```
+
+### **전달받은 아이디를 이용해서 해당 포스트의 데이터 가져오기**
+
+```tsx
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const postData = await getPostData(params.id as string);
+  return {
+    props: {
+      postData,
+    },
+  };
+};
+```
+
+```tsx
+export async function getPostData(id: string) {
+  const fullPath = path.join(postsDirectory, `${id}.md`);
+  const fileContents = fs.readFileSync(fullPath, "utf8");
+
+  const matterResult = matter(fileContents);
+
+  const processedContent = await remark()
+    .use(remarkHtml)
+    .process(matterResult.content);
+  const contentHtml = processedContent.toString();
+
+  return {
+    id,
+    contentHtml,
+    ...(matterResult.data as { data: string; title: string }),
+  };
+}
+```
+
+### 가져온 데이터 화면에서 보여주기
+
+```tsx
+const Post = ({
+  postData,
+}: {
+  postData: {
+    title: string;
+    date: string;
+    contentHtml: string;
+  };
+}) => {
+  return (
+    <div>
+      <Head>
+        <title>{postData.title}</title>
+      </Head>
+      <article>
+        <h1>{postData.title}</h1>
+        <div>{postData.date}</div>
+        <div dangerouslySetInnerHTML={{ __html: postData.contentHtml }}></div>
+      </article>
+    </div>
+  );
+};
+```
+
+## 애플리케이션 스타일링
+
+`Post.module.css` , `Home.module.css`
+
+```css
+.container {
+  max-width: 36rem;
+  padding: 0 1rem;
+  margin: 3rem auto 6rem;
+}
+```
+
+## **NextJS App Router**
+
+### next app 설치
+
+nextjs13-app 생성 후 `npx create-next-app ./`
+
+### 백엔드 서비스를 위한 포켓 베이스 이용하기
+
+https://pocketbase.io/docs/
+
+### 사용법
+
+1. 다운로드 폴더에서 pocketbase 파일을 next app의 root 폴더에 복사 붙여넣기
+2. `./pocketbase serve` 입력
+3. **Admin UI 접속**
+4. Data 생성 - New Collection - Name 입력 - field 선택 - create
+5. Data settings - API Rules - Unlock All Rules
+
+### File System Routing
+
+- `home/` **:** abc.com/home - plain path
+- `[slug]/` : abc.com/{slug} - dynamic path
+- `(group)/` : abc.com/ - just for grouping, 경로에 포함되지 않는다.
+
+### 기본 파일 및 컴포넌트 생성
+
+```tsx
+import Image from "next/image";
+import styles from "./page.module.css";
+
+export default function Home() {
+  return <div>Homepage</div>;
+}
+```
+
+프로젝트 실행 - `npm run dev`
+
+### 전체 스타일링
+
+```tsx
+return (
+  <html lang="en">
+    <body className={inter.className}>
+      <nav>
+        <Link href={"/"}>Home</Link> &nbsp;&nbsp;
+        <Link href={"/posts"}>Post</Link>
+      </nav>
+      <main>{children}</main>
+    </body>
+  </html>
+);
+```
+
+### Post page 생성
+
+`./app/posts/page.tsx`
+
+```tsx
+import React from "react";
+
+const PostsPage = () => {
+  return <div>PostsPage</div>;
+};
+
+export default PostsPage;
+```
+
+nextjs 컴포넌트는 기본적으로 Server Component
+
+### getPosts
+
+```tsx
+async function getPost() {
+  const res = await fetch(
+    "http://127.0.0.1:8090/api/collections/posts/records"
+  );
+  const data = await res.json();
+  return data?.items as any[];
+}
+```
+
+### posts 나열하기
+
+```tsx
+const PostsPage = async () => {
+  const posts = await getPost();
+
+  return (
+    <div>
+      <h1>Posts</h1>
+      {posts?.map((post) => {
+        return <PostItem key={post.id} post={post} />;
+      })}
+    </div>
+  );
+};
+```
+
+### PostItem 컴포넌트
+
+```tsx
+const PostItem = ({ post }: any) => {
+  const { id, title, created } = post || {};
+  return (
+    <>
+      <Link href={`/posts/${id}`}>
+        <div>
+          <h3>{title}</h3>
+          <p>{created}</p>
+        </div>
+      </Link>
+    </>
+  );
+};
+```
+
+### Static Data Fetching
+
+기본적으로 fetch는 자동으로 데이터를 가져오고 캐시한다.
+
+### Refresh on every request
+
+캐시가 안되게 하고 모든 리퀘스트 마다 다시 가져올 수 있게 해준다.
+
+```tsx
+async function getPost() {
+  const res = await fetch(
+    "http://127.0.0.1:8090/api/collections/posts/records",
+    {
+      cache: "no-store",
+    }
+  );
+  const data = await res.json();
+  return data?.items as any[];
+}
+```
+
+### Post Detail Page 생성
+
+`./app/posts/[id]/page.tsx`
+
+```tsx
+const PostDetailPage = () => {
+  return <div>PostDetailPage</div>;
+};
+
+export default PostDetailPage;
+```
+
+### 데이터 가져오기
+
+```tsx
+async function getPost(postId: string) {
+  const res = await fetch(
+    `http://127.0.0.1:8090/api/collections/posts/records/${postId}`
+  );
+}
+```
+
+### Revalidating Data
+
+캐시된 데이터를 일정 시간 간격으로 재검증하려면 fetch() 에서 next.revalidate 옵션을 사용할 수 있다. 기본 단위는 초이다.
+
+```tsx
+async function getPost(postId: string) {
+  const res = await fetch(
+    `http://127.0.0.1:8090/api/collections/posts/records/${postId}`,
+    {
+      next: { revalidate: 10 },
+    }
+  );
+}
+```
+
+### id에 따른 Post 데이터, UI 생성
+
+```tsx
+async function getPost(postId: string) {
+  const res = await fetch(
+    `http://127.0.0.1:8090/api/collections/posts/records/${postId}`,
+    {
+      next: { revalidate: 10 },
+    }
+  );
+
+  const data = res.json();
+  return data;
+}
+
+const PostDetailPage = async ({ params }: any) => {
+  const post = await getPost(params.id);
+  return (
+    <div>
+      <h1>posts/{post.id}</h1>
+      <div>
+        <h3>{post.title}</h3>
+        <p>{post.created}</p>
+      </div>
+    </div>
+  );
+};
+
+export default PostDetailPage;
+```
+
+### error.tsx
+
+```tsx
+async function getPost(postId: string) {
+  const res = await fetch(
+    `http://127.0.0.1:8090/api/collections/posts/records/${postId}`,
+    {
+      next: { revalidate: 10 },
+    }
+  );
+
+  if (!res.ok) {
+    // 가장 가까이에 있는 error.js 파일이 activated
+    throw new Error("Failed to fetch data");
+  }
+
+  const data = res.json();
+  return data;
+}
+```
+
+```tsx
+"use client"; // Error components must be Client Components
+
+import { useEffect } from "react";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log the error to an error reporting service
+    console.error(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button
+        onClick={
+          // Attempt to recover by trying to re-render the segment
+          () => reset()
+        }
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
+```
+
+### 데이터 생성 컴포넌트 생성
+
+데이터 생성을 위해 useState() 또는 onClick 을 사용하므로 클라이언트 컴포넌트를 사용해야 한다.
+
+Client Component 를 사용하려면 앱 내부에 파일을 만들고 파일 상단에 ‘use client’ 지시문을 임포트하기 전에 추가한다.
+
+```tsx
+"use client";
+
+const CreatePost = () => {
+  return <div>CreatePost</div>;
+};
+
+export default CreatePost;
+```
+
+```tsx
+const CreatePost = () => {
+  const [title, setTitle] = useState("");
+  return (
+    <form>
+      <input
+        type="text"
+        placeholder="Title"
+        value={title}
+        onChange={(event) => setTitle(event.target.value)}
+      ></input>
+      <button type="submit">Create Post</button>
+    </form>
+  );
+};
+```
+
+### POST 요청 보내기
+
+```tsx
+const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  await fetch("http://127.0.0.1:8080/api/collections/posts/records", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title,
+    }),
+  });
+  setTitle("");
+};
+
+return (
+    <form onSubmit={handleSubmit}>
+```
+
+### CreatePost 컴포넌트 Import
+
+```tsx
+const PostsPage = async () => {
+  const posts = await getPost();
+
+  return (
+    <div>
+      <h1>Posts</h1>
+      {posts?.map((post) => {
+        return <PostItem key={post.id} post={post} />;
+      })}
+      <CreatePost />
+    </div>
+  );
+};
+```
+
+### refresh()
+
+refresh()를 호출하면 현재 경로가 서버에서 업데이트 된 할 일 목록을 새로고침 하고 가져온다. 이는 브라우저 기록에 영향을 미치지 않지만 루트 레이아웃에서 아래로 데이터를 새로 고침한다. refresh()를 사용할 때 React 및 브라우저 상태를 모두 포함하여 클라이언트 측 상태가 손실되지 않는다. full page refresh를 안해도 된다.
+
+```tsx
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+const CreatePost = () => {
+  const [title, setTitle] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await fetch("http://127.0.0.1:8080/api/collections/posts/records", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+      }),
+    });
+    setTitle("");
+    router.refresh();
+  };
+```
+
+## Server Action
+
+폴더 생성 후 `npx create-next-app@latest ./`
+
+```jsx
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // 베타 버전이기 때문에 설정해준다.
+  experimental: {
+    serverActions: true,
+  },
+};
+
+module.exports = nextConfig;
+```
+
+### Server Component
+
+함수 본문 상단에 “use server” 지시문을 사용하여 비동기 함수를 정의하고 서버 작업을 만든다. “use server”는 이 기능이 서버에서만 실행되도록 한다.
+
+```tsx
+import Image from "next/image";
+
+export default function ServerComponent() {
+  async function myAction() {
+    "use server";
+  }
+  return <div></div>;
+}
+```
+
+### Client Component
+
+파일 상단에 “use server” 지시문을 사용하여 별도의 파일에 서버 작업을 만든다. 그런 다음 서버 작업을 클라이언트 구성 요소로 가져온다.
+
+```tsx
+"use server";
+
+export async function myAction() {}
+```
+
+```tsx
+import { myAction } from "@/lib/actions";
+import React from "react";
+
+const ClientComponents = () => {
+  return (
+    <form action={myAction}>
+      <button type="submit">Add to Cart</button>
+    </form>
+  );
+};
+
+export default ClientComponents;
+```
+
+server action은 파일을 따로 만들면 ClientComponents에서도 가져와서 쓸 수 있다.
+
+### Server Action 호출 방법
+
+- Using `action` : 리액션의 `action` prop은 `<form>`요소에 넣어서 server action을 호출한다.
+- Using `formAction` : React의 `formAction` prop은 <form> 요소의 `<button>`, `<input type=“submit”>`, `<input type=“image”>` 에서 사용할 수 있다.
+- Custom Invocation with `startTransition`
+
+### Todo App 생성
+
+```json
+{
+  "todos": [
+    {
+      "userId": 1,
+      "title": "밥먹기",
+      "completed": false,
+      "id": 3
+    },
+    {
+      "userId": 2,
+      "title": "잠자기",
+      "completed": false,
+      "id": 4
+    }
+  ]
+}
+```
+
+### json server 이용하여 실제 server 만들기
+
+`npm install -g json-server` 명령어 입력
+`json-server --watch db.json -p 3001`
+
+```
+npm ERR! code EACCES
+npm ERR! syscall mkdir
+npm ERR! path /usr/local/lib/node_modules/json-server
+npm ERR! errno -13
+npm ERR! Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/json-server'
+npm ERR!  [Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/json-server'] {
+npm ERR!   errno: -13,
+npm ERR!   code: 'EACCES',
+npm ERR!   syscall: 'mkdir',
+npm ERR!   path: '/usr/local/lib/node_modules/json-server'
+npm ERR! }
+```
+
+와 같이 에러 발생 시 권한 문제로 터미널을 통한 다운로드가 되지 않는 것이다.
+
+이럴 때는 `sudo npm install -g json-server` 로 입력해준다.
+
+\***\*다른 방법 : [[Node.js] Error: EACCES: permission denied](https://velog.io/@milkcoke/Node.js-Error-EACCES-permission-denied)**
+
+```tsx
+import Image from "next/image";
+import Form from "./components/Form";
+import TodoList from "./components/TodoList";
+
+export default function Home() {
+  return (
+    <div>
+      <Form />
+      <TodoList />
+    </div>
+  );
+}
+```
+
+### Todo List
+
+```tsx
+import React from "react";
+import TodoItem from "./TodoItem";
+
+type Todo = {
+  userId: number;
+  id: number;
+  title: string;
+  completed: boolean;
+};
+
+async function fetchTodos() {
+  try {
+    const res = await fetch("http://localhost:3001/todos");
+    const todos: Todo[] = await res.json();
+    return todos;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.stack);
+    }
+  }
+}
+
+const TodoList = async () => {
+  const todos = await fetchTodos();
+
+  let content;
+  if (!todos || todos.length === 0) {
+    content = <p>Todo 리스트가 없습니다.</p>;
+  } else {
+    const sortedTodos = todos.reverse();
+
+    content = (
+      <>
+        {sortedTodos.map((todo) => (
+          <TodoItem key={todo.id} {...todo} />
+        ))}
+      </>
+    );
+  }
+  return content;
+};
+
+export default TodoList;
+```
+
+실행할 때 json sever가 실행되어 있어야하고, `npm run dev` 도 실행한다. (터미널 창 하나 더 생성하면 된다.)
+
+### Todo Item
+
+```tsx
+import React from "react";
+import { Todo } from "./TodoList";
+import Link from "next/link";
+
+const TodoItem = (todo: Todo) => {
+  return (
+    <form className="my-4 flex justify-between items-center">
+      <label htmlFor="completed" className="test-2xl hover:underline">
+        <Link href={`/edit/${todo.id}`}>{todo.title}</Link>
+      </label>
+      <div className="flex items-center gap-4`">
+        CheckBox
+        <button>X</button>
+      </div>
+    </form>
+  );
+};
+
+export default TodoItem;
+```
+
+### Form
+
+```tsx
+import { addTodo } from "@/lib/actions";
+import React from "react";
+
+const Form = () => {
+  return (
+    <form action={addTodo} className="flex items-center gap-2">
+      <input
+        type="text"
+        name="title"
+        className="flex-grow w-full p-1 text-2xl rounded-lg"
+        placeholder="새로운 할 일을 생성하세요."
+      />
+      <button type="submit">Submit</button>
+    </form>
+  );
+};
+
+export default Form;
+```
+
+```tsx
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+export async function addTodo(data: FormData) {
+  const title = data.get("title");
+
+  await fetch("http://localhost:3001/todos", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId: 1,
+      title,
+      completed: false,
+    }),
+  });
+
+  revalidatePath("/");
+}
+```
+
+`revalidatePath()`
+
+캐시되어 있던 데이터를 없애준다. 새로 목록을 추가하기 위해서 원래 캐시되어 있던 데이터를 없애주기 위해 `revalidatePath()`를 사용한다.
+
+### 삭제 기능 생성
+
+`formAction` 사용
+
+```tsx
+import React from "react";
+import { Todo } from "./TodoList";
+import Link from "next/link";
+import { deleteTodo } from "@/lib/actions";
+
+const TodoItem = (todo: Todo) => {
+  return (
+    <form className="my-4 flex justify-between items-center">
+      <label htmlFor="completed" className="test-2xl hover:underline">
+        <Link href={`/edit/${todo.id}`}>{todo.title}</Link>
+      </label>
+      <div className="flex items-center gap-4">
+        CheckBox
+        <button
+          formAction={async () => {
+            "use server";
+            await deleteTodo(todo);
+          }}
+        >
+          X
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default TodoItem;
+```
+
+```tsx
+export async function deleteTodo(todo: Todo) {
+  const res = await fetch(`http://localhost:3001/todos/${todo.id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: todo.id,
+    }),
+  });
+
+  await res.json();
+  revalidatePath("/");
+}
+```
+
+### 체크 업데이트 기능 생성
+
+`startTransition` 사용
+
+```tsx
+const TodoItem = (todo: Todo) => {
+  return (
+    <form className="my-4 flex justify-between items-center">
+      <label htmlFor="completed" className="test-2xl hover:underline">
+        <Link href={`/edit/${todo.id}`}>{todo.title}</Link>
+      </label>
+      <div className="flex items-center gap-4">
+        <Checkbox todo={todo} />
+```
+
+```tsx
+"use client";
+import React, { useTransition } from "react";
+import { Todo } from "./TodoList";
+import { updateTodo } from "@/lib/actions";
+
+const Checkbox = ({ todo }: { todo: Todo }) => {
+  const [isPending, startTransition] = useTransition();
+  return (
+    <input
+      type="checkbox"
+      checked={todo.completed}
+      id="completed"
+      name="completed"
+      disabled={isPending}
+      onChange={() => startTransition(() => updateTodo(todo))}
+      className="min-w-[2rem] min-h-[2rem]"
+    />
+  );
+};
+export default Checkbox;
+```
+
+```tsx
+export async function updateTodo(todo: Todo) {
+  const res = await fetch(`http://localhost:3001/todos/${todo.id}`, {
+    method: "PUT",
+    headers: {
+      "CONTENT-Type": "application/json",
+    },
+    body: JSON.stringify({
+      ...todo,
+      completed: !todo.completed,
+    }),
+  });
+  await res.json();
+  revalidatePath("/");
+}
+```
+
+### sleep 추가
+
+```tsx
+export default function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+```
+
+```tsx
+export async function updateTodo(todo: Todo) {
+  const res = await fetch(`http://localhost:3001/todos/${todo.id}`, {
+    method: "PUT",
+    headers: {
+      "CONTENT-Type": "application/json",
+    },
+    body: JSON.stringify({
+      ...todo,
+      completed: !todo.completed,
+    }),
+  });
+  await res.json();
+  await sleep(1000);
+  revalidatePath("/");
+}
+```
+
+체크박스를 클릭했을 때 백엔드에서 다 처리가 되고 난 이후에 응답을 받으면 체크박스가 업데이트 된다.
+
+### useOptimistic 사용
+
+`useOptimistic()` 을 사용하면 백엔드 작업이 끝나기 전에 변화를 볼 수 있다.
+
+```tsx
+"use client";
+import React, { useOptimistic, useTransition } from "react";
+import { Todo } from "./TodoList";
+import { updateTodo } from "@/lib/actions";
+
+const Checkbox = ({ todo }: { todo: Todo }) => {
+  const [optimisticTodo, appOptimisticTodo] = useOptimistic(
+    todo,
+    (state: Todo, completed: boolean) => ({ ...state, completed })
+  );
+  //   const [isPending, startTransition] = useTransition();
+  return (
+    <input
+      type="checkbox"
+      checked={optimisticTodo.completed}
+      id="completed"
+      name="completed"
+      //  disabled={isPending}
+      onChange={async () => {
+        appOptimisticTodo(!todo.completed);
+        await updateTodo(todo);
+      }}
+      className="min-w-[2rem] min-h-[2rem]"
+    />
+  );
+};
+export default Checkbox;
+```
